@@ -10,6 +10,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const pricePerMTokMultiplier = 1_000_000
+
 // AvailableChannelHandler 处理用户侧「可用渠道」查询。
 //
 // 用户侧接口委托 ChannelService.ListAvailable，并在返回前做三层过滤：
@@ -111,6 +113,33 @@ type userAvailableChannel struct {
 	Platforms   []userChannelPlatformSection `json:"platforms"`
 }
 
+// publicGPTEarlyBirdModelPricing 公开首页展示用的早鸟 GPT 模型定价。
+//
+// token 价格字段单位为管理端展示口径 / MTok；图片/按次价格保持每次请求口径。
+// 区间定价不对外返回。
+type publicGPTEarlyBirdModelPricing struct {
+	Model            string   `json:"model"`
+	Platform         string   `json:"platform"`
+	BillingMode      string   `json:"billing_mode"`
+	InputPrice       *float64 `json:"input_price"`
+	OutputPrice      *float64 `json:"output_price"`
+	CacheWritePrice  *float64 `json:"cache_write_price"`
+	CacheReadPrice   *float64 `json:"cache_read_price"`
+	ImageOutputPrice *float64 `json:"image_output_price"`
+	PerRequestPrice  *float64 `json:"per_request_price"`
+}
+
+// ListPublicGPTEarlyBirdModels 列出匿名可访问的 GPT 早鸟渠道模型和展示定价。
+// GET /api/v1/channels/public/gpt-early-bird/models
+func (h *AvailableChannelHandler) ListPublicGPTEarlyBirdModels(c *gin.Context) {
+	models, err := h.channelService.ListPublicGPTEarlyBirdSupportedModels(c.Request.Context())
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Success(c, toPublicGPTEarlyBirdModelPricing(models))
+}
+
 // List 列出当前用户可见的「可用渠道」。
 // GET /api/v1/channels/available
 func (h *AvailableChannelHandler) List(c *gin.Context) {
@@ -164,6 +193,46 @@ func (h *AvailableChannelHandler) List(c *gin.Context) {
 	}
 
 	response.Success(c, out)
+}
+
+func toPublicGPTEarlyBirdModelPricing(src []service.SupportedModel) []publicGPTEarlyBirdModelPricing {
+	out := make([]publicGPTEarlyBirdModelPricing, 0, len(src))
+	for i := range src {
+		m := src[i]
+		row := publicGPTEarlyBirdModelPricing{
+			Model:    m.Name,
+			Platform: m.Platform,
+		}
+		if p := m.Pricing; p != nil {
+			row.BillingMode = string(p.BillingMode)
+			if row.BillingMode == "" {
+				row.BillingMode = string(service.BillingModeToken)
+			}
+			row.InputPrice = pricePerTokenToMTok(p.InputPrice)
+			row.OutputPrice = pricePerTokenToMTok(p.OutputPrice)
+			row.CacheWritePrice = pricePerTokenToMTok(p.CacheWritePrice)
+			row.CacheReadPrice = pricePerTokenToMTok(p.CacheReadPrice)
+			if p.BillingMode == service.BillingModeImage {
+				// 图片计费当前按次；保持管理端配置的每次请求价格，避免被 MTok 转换放大。
+				row.ImageOutputPrice = p.ImageOutputPrice
+			} else {
+				row.ImageOutputPrice = pricePerTokenToMTok(p.ImageOutputPrice)
+			}
+			row.PerRequestPrice = p.PerRequestPrice
+		} else {
+			row.BillingMode = string(service.BillingModeToken)
+		}
+		out = append(out, row)
+	}
+	return out
+}
+
+func pricePerTokenToMTok(v *float64) *float64 {
+	if v == nil {
+		return nil
+	}
+	converted := *v * pricePerMTokMultiplier
+	return &converted
 }
 
 // buildPlatformSections 把一个渠道按 visibleGroups 的平台集合拆成有序的 section 列表：

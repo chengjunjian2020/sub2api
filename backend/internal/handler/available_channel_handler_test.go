@@ -155,3 +155,63 @@ func TestBuildPlatformSections_GroupsByPlatform(t *testing.T) {
 	require.Len(t, sections[0].SupportedModels, 1)
 	require.Equal(t, "claude-sonnet-4-6", sections[0].SupportedModels[0].Name)
 }
+
+func TestToPublicGPTEarlyBirdModelPricing_ConvertsPricesToMTok(t *testing.T) {
+	ptr := func(v float64) *float64 { return &v }
+	rows := toPublicGPTEarlyBirdModelPricing([]service.SupportedModel{
+		{
+			Name:     "gpt-5.5",
+			Platform: service.PlatformOpenAI,
+			Pricing: &service.ChannelModelPricing{
+				BillingMode:      service.BillingModeToken,
+				InputPrice:       ptr(0.000005),
+				OutputPrice:      ptr(0.000008),
+				CacheWritePrice:  nil,
+				CacheReadPrice:   ptr(0.000001),
+				ImageOutputPrice: ptr(0.000002),
+				PerRequestPrice:  ptr(0.2),
+				Intervals: []service.PricingInterval{
+					{MinTokens: 0, MaxTokens: nil, InputPrice: ptr(0.000004)},
+				},
+			},
+		},
+	})
+
+	require.Len(t, rows, 1)
+	require.Equal(t, "gpt-5.5", rows[0].Model)
+	require.Equal(t, service.PlatformOpenAI, rows[0].Platform)
+	require.Equal(t, "token", rows[0].BillingMode)
+	require.Equal(t, 5.0, *rows[0].InputPrice)
+	require.Equal(t, 8.0, *rows[0].OutputPrice)
+	require.Nil(t, rows[0].CacheWritePrice)
+	require.Equal(t, 1.0, *rows[0].CacheReadPrice)
+	require.Equal(t, 2.0, *rows[0].ImageOutputPrice)
+	require.Equal(t, 0.2, *rows[0].PerRequestPrice)
+
+	raw, err := json.Marshal(rows[0])
+	require.NoError(t, err)
+	var decoded map[string]any
+	require.NoError(t, json.Unmarshal(raw, &decoded))
+	_, hasIntervals := decoded["intervals"]
+	require.False(t, hasIntervals, "public GPT pricing response must not expose intervals")
+}
+
+func TestToPublicGPTEarlyBirdModelPricing_KeepsImageBillingPerRequestPrice(t *testing.T) {
+	ptr := func(v float64) *float64 { return &v }
+	rows := toPublicGPTEarlyBirdModelPricing([]service.SupportedModel{
+		{
+			Name:     "gpt-image-2",
+			Platform: service.PlatformOpenAI,
+			Pricing: &service.ChannelModelPricing{
+				BillingMode:      service.BillingModeImage,
+				ImageOutputPrice: ptr(0.01),
+				PerRequestPrice:  ptr(0.01),
+			},
+		},
+	})
+
+	require.Len(t, rows, 1)
+	require.Equal(t, "image", rows[0].BillingMode)
+	require.Equal(t, 0.01, *rows[0].ImageOutputPrice)
+	require.Equal(t, 0.01, *rows[0].PerRequestPrice)
+}

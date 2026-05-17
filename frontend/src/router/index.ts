@@ -33,7 +33,8 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/HomeView.vue'),
     meta: {
       requiresAuth: false,
-      title: 'Home'
+      title: 'Codex API Relay',
+      titleKey: 'home.brand.tagline'
     }
   },
   {
@@ -232,6 +233,10 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    path: '/ai',
+    redirect: '/admin/ai/chat'
+  },
+  {
     path: '/profile',
     name: 'Profile',
     component: () => import('@/views/user/ProfileView.vue'),
@@ -355,6 +360,32 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/admin',
     redirect: '/admin/dashboard'
+  },
+  {
+    path: '/admin/ai',
+    redirect: '/admin/ai/chat'
+  },
+  {
+    path: '/admin/ai/chat',
+    name: 'AiCreationChat',
+    component: () => import('@/features/ai-creation/chat/ChatPage.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: false,
+      title: 'AI 创作',
+      description: '对话、文件和联网搜索测试'
+    }
+  },
+  {
+    path: '/admin/ai/image',
+    name: 'AiCreationImage',
+    component: () => import('@/features/ai-creation/image/ImagePage.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: false,
+      title: 'AI 创作',
+      description: '图片生成与历史记录'
+    }
   },
   {
     path: '/admin/dashboard',

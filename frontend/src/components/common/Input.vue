@@ -21,7 +21,11 @@
         :disabled="disabled"
         :required="required"
         :placeholder="placeholderText"
+        :name="name"
         :autocomplete="autocomplete"
+        :autocapitalize="autocapitalize"
+        :autocorrect="autocorrect"
+        :spellcheck="spellcheck"
         :readonly="readonly"
         :class="[
           'input w-full transition-all duration-200',
@@ -69,7 +73,11 @@ interface Props {
   error?: string
   hint?: string
   id?: string
+  name?: string
   autocomplete?: string
+  autocapitalize?: string
+  autocorrect?: string
+  spellcheck?: boolean | 'true' | 'false'
 }
 
 const props = withDefaults(defineProps<Props>(), {

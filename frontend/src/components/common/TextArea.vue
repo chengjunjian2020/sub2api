@@ -12,6 +12,11 @@
         :disabled="disabled"
         :required="required"
         :placeholder="placeholderText"
+        :name="name"
+        :autocomplete="autocomplete"
+        :autocapitalize="autocapitalize"
+        :autocorrect="autocorrect"
+        :spellcheck="spellcheck"
         :readonly="readonly"
         :rows="rows"
         :class="[
@@ -48,6 +53,11 @@ interface Props {
   error?: string
   hint?: string
   id?: string
+  name?: string
+  autocomplete?: string
+  autocapitalize?: string
+  autocorrect?: string
+  spellcheck?: boolean | 'true' | 'false'
   rows?: number | string
 }
 

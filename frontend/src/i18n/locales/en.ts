@@ -10,6 +10,128 @@ export default {
     login: 'Login',
     getStarted: 'Get Started',
     goToDashboard: 'Go to Dashboard',
+    brand: {
+      tagline: 'Codex API relay'
+    },
+    nav: {
+      usageQuery: 'Usage'
+    },
+    hero: {
+      badge: '{domain} · Codex API relay',
+      title: 'Make Codex access',
+      highlight: 'faster, steadier, easier to control',
+      subtitle: 'A stable relay service built for GPT and Codex workflows, currently supporting GPT-5.5, GPT-5.4 and GPT Image. Gemini, Claude and more models are planned, with flexible early-bird metered pricing and monthly plans.',
+      primaryCta: 'Sign up and try it',
+      secondaryCta: 'Check API key usage'
+    },
+    visual: {
+      live: 'Online',
+      terminalLabel: 'Quick setup',
+      terminalTitle: 'One Base URL for your Codex workflow',
+      codexCommand: 'run',
+      response: 'gateway response ready',
+      providerTitle: 'Multi-model routing',
+      providerDescription: 'One endpoint routes traffic to available upstreams'
+    },
+    stats: {
+      unifiedKey: 'Unified key',
+      transport: 'Encrypted',
+      routing: 'Smart routing',
+      auto: 'Auto',
+      usage: 'Usage billing',
+      visible: 'Visible'
+    },
+    trust: {
+      direct: {
+        title: 'Direct access experience',
+        description: 'Optimized for Codex, Claude Code, Gemini CLI and other developer tools.'
+      },
+      speed: {
+        title: 'Smoother at peak time',
+        description: 'Account pools and layered routing reduce interruptions caused by single-channel limits.'
+      },
+      security: {
+        title: 'Encrypted transport',
+        description: 'HTTPS access with separated key handling and centralized sensitive settings.'
+      },
+      billing: {
+        title: 'Transparent usage',
+        description: 'Review usage by API key for personal cost control or team chargeback.'
+      }
+    },
+    reasons: {
+      eyebrow: 'Built for developers',
+      title: 'Turn access headaches into focused coding time',
+      description: 'The homepage now leads with trust: simple setup, steadier routing, team controls and visible cost. Pricing and onboarding details can be plugged into this structure later.',
+      items: {
+        gateway: {
+          title: 'Unified API gateway',
+          description: 'One compatible endpoint covers multiple models and clients, so switching models does not require rewiring every tool.'
+        },
+        route: {
+          title: 'Automatic upstream failover',
+          description: 'When a route errors, rate limits or goes into maintenance, traffic can move according to configured rules.'
+        },
+        team: {
+          title: 'Team quota control',
+          description: 'Manage API keys, users, quotas and permissions in layers for shared team usage.'
+        },
+        audit: {
+          title: 'Usage you can verify',
+          description: 'Requests, tokens, cost and model breakdowns stay traceable for easier review.'
+        }
+      }
+    },
+    plans: {
+      eyebrow: 'Access plans',
+      title: 'Keep the entry lightweight, connect real plans later',
+      description: 'This area avoids hard-coded pricing so you can later wire it to configured plans, top-ups, promo codes or manual onboarding.',
+      personal: {
+        kicker: 'Solo developer',
+        name: 'Light access',
+        price: 'Metered',
+        priceHint: 'Good for trials',
+        description: 'A low-friction entry for personal Codex and CLI usage, focused on creating a key and getting running fast.',
+        features: {
+          key: 'Dedicated API key',
+          codex: 'Codex workflow access',
+          usage: 'Self-serve usage query',
+          quota: 'Balance and quota alerts'
+        }
+      },
+      team: {
+        kicker: 'Studio / team',
+        name: 'Team channel',
+        price: 'Custom',
+        priceHint: 'Opened as needed',
+        description: 'For shared usage where stable routing, member controls and consolidated billing matter.',
+        features: {
+          pool: 'Dedicated upstream strategy',
+          members: 'Member permissions',
+          invoice: 'Team billing rollup',
+          support: 'Assisted onboarding'
+        }
+      }
+    },
+    steps: {
+      eyebrow: 'Start in three steps',
+      title: 'Get running without configuration drama',
+      description: 'Register, create a key and set the Base URL. The first connection should feel boring in the best way.',
+      items: {
+        register: {
+          title: 'Create an account',
+          description: 'Register with email and enter the console to review available features.'
+        },
+        key: {
+          title: 'Create an API key',
+          description: 'Generate keys in the API Keys page and separate them by project or member.'
+        },
+        run: {
+          title: 'Connect Codex',
+          description: 'Set the Base URL and key, then keep using your terminal or IDE workflow.'
+        }
+      }
+    },
     // User-focused value proposition
     heroSubtitle: 'One Key, All AI Models',
     heroDescription: 'No need to manage multiple subscriptions. Access Claude, GPT, Gemini and more with a single API key',
@@ -101,8 +223,8 @@ export default {
     },
     // CTA section
     cta: {
-      title: 'Ready to Get Started?',
-      description: 'Sign up now and get free trial credits to experience seamless AI access',
+      title: 'Ready to make Codex access steady?',
+      description: 'Create an account, generate a key and point your Codex workflow at one managed gateway.',
       button: 'Sign Up Free'
     },
     footer: {
@@ -684,6 +806,10 @@ export default {
     quota: 'Quota',
     lastUsedAt: 'Last Used',
     useKey: 'Use Key',
+    aiChat: 'AI Chat',
+    aiImage: 'AI Image',
+    aiChatWithKey: 'Open AI Chat with this key',
+    aiImageWithKey: 'Open AI Image with this key',
     useKeyModal: {
       title: 'Use API Key',
       description:

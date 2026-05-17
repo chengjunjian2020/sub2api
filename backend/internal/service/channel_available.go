@@ -2,10 +2,13 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
 )
+
+const PublicGPTEarlyBirdChannelID int64 = 1
 
 // AvailableGroupRef 渠道视图中关联分组的简要信息。
 //
@@ -32,6 +35,28 @@ type AvailableChannel struct {
 	RestrictModels     bool
 	Groups             []AvailableGroupRef
 	SupportedModels    []SupportedModel
+}
+
+// ListPublicGPTEarlyBirdSupportedModels 返回公开首页展示用的 GPT 早鸟渠道支持模型。
+//
+// 该接口固定读取 PublicGPTEarlyBirdChannelID，不接受外部参数，避免匿名接口
+// 依赖可变渠道名称或变成通用渠道枚举入口。定价仍保持 service 层内部的每 token 存储单位，展示单位由
+// handler 层转换。
+func (s *ChannelService) ListPublicGPTEarlyBirdSupportedModels(ctx context.Context) ([]SupportedModel, error) {
+	ch, err := s.repo.GetByID(ctx, PublicGPTEarlyBirdChannelID)
+	if err != nil {
+		if errors.Is(err, ErrChannelNotFound) {
+			return []SupportedModel{}, nil
+		}
+		return nil, fmt.Errorf("get channel: %w", err)
+	}
+	if !ch.IsActive() {
+		return []SupportedModel{}, nil
+	}
+
+	supported := ch.SupportedModels()
+	s.fillGlobalPricingFallback(supported)
+	return supported, nil
 }
 
 // ListAvailable 返回所有渠道的可用视图：每个渠道附带关联分组信息与支持模型列表。

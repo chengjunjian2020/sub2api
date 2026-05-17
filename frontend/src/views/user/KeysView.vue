@@ -319,6 +319,24 @@
                 <Icon name="terminal" size="sm" />
                 <span class="text-xs">{{ t('keys.useKey') }}</span>
               </button>
+              <!-- Open AI Chat Button -->
+              <button
+                @click="openAiCreation(row, 'chat')"
+                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-primary-50 hover:text-primary-600 dark:hover:bg-primary-900/20 dark:hover:text-primary-400"
+                :title="t('keys.aiChatWithKey')"
+              >
+                <Icon name="chat" size="sm" />
+                <span class="text-xs">{{ t('keys.aiChat') }}</span>
+              </button>
+              <!-- Open AI Image Button -->
+              <button
+                @click="openAiCreation(row, 'image')"
+                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-primary-50 hover:text-primary-600 dark:hover:bg-primary-900/20 dark:hover:text-primary-400"
+                :title="t('keys.aiImageWithKey')"
+              >
+                <Icon name="sparkles" size="sm" />
+                <span class="text-xs">{{ t('keys.aiImage') }}</span>
+              </button>
               <!-- Import to CC Switch Button -->
               <button
                 v-if="!publicSettings?.hide_ccs_import_button"
@@ -1046,6 +1064,7 @@
 
 <script setup lang="ts">
 	import { ref, computed, onMounted, onUnmounted, type ComponentPublicInstance } from 'vue'
+	import { useRouter } from 'vue-router'
 	import { useI18n } from 'vue-i18n'
 	import { useAppStore } from '@/stores/app'
 	import { useOnboardingStore } from '@/stores/onboarding'
@@ -1097,6 +1116,7 @@ interface GroupOption {
 
 const appStore = useAppStore()
 const onboardingStore = useOnboardingStore()
+const router = useRouter()
 const { copyToClipboard: clipboardCopy } = useClipboard()
 
 const columns = computed<Column[]>(() => [
@@ -1688,6 +1708,13 @@ const resetRateLimitUsage = async () => {
     const errorMsg = error.response?.data?.detail || t('keys.failedToResetRateLimit')
     appStore.showError(errorMsg)
   }
+}
+
+const openAiCreation = (row: ApiKey, mode: 'chat' | 'image' = 'chat') => {
+  router.push({
+    path: mode === 'image' ? '/admin/ai/image' : '/admin/ai/chat',
+    query: { key: row.key }
+  })
 }
 
 const importToCcswitch = (row: ApiKey) => {

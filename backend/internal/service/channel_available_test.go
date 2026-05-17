@@ -175,3 +175,72 @@ func TestListAvailable_DefaultsEmptyBillingModelSource(t *testing.T) {
 	require.Equal(t, BillingModelSourceChannelMapped, byName["empty"])
 	require.Equal(t, BillingModelSourceUpstream, byName["explicit"])
 }
+
+func TestListPublicGPTEarlyBirdSupportedModels_ReturnsFixedChannelID(t *testing.T) {
+	// 匿名首页接口只读取固定 ID，渠道改名后仍可工作。
+	var gotID int64
+	repo := &mockChannelRepository{
+		getByIDFn: func(ctx context.Context, id int64) (*Channel, error) {
+			gotID = id
+			return &Channel{
+				ID:     id,
+				Name:   "renamed channel",
+				Status: StatusActive,
+				ModelPricing: []ChannelModelPricing{{
+					Platform:        PlatformOpenAI,
+					Models:          []string{"gpt-5.5"},
+					BillingMode:     BillingModeToken,
+					InputPrice:      publicChannelFloatPtr(0.000005),
+					OutputPrice:     publicChannelFloatPtr(0.000008),
+					CacheReadPrice:  publicChannelFloatPtr(0.000001),
+					CacheWritePrice: nil,
+				}},
+			}, nil
+		},
+	}
+	svc := NewChannelService(repo, &stubGroupRepoForAvailable{}, nil, nil)
+
+	out, err := svc.ListPublicGPTEarlyBirdSupportedModels(context.Background())
+
+	require.NoError(t, err)
+	require.Equal(t, PublicGPTEarlyBirdChannelID, gotID)
+	require.Len(t, out, 1)
+	require.Equal(t, "gpt-5.5", out[0].Name)
+	require.Equal(t, PlatformOpenAI, out[0].Platform)
+	require.NotNil(t, out[0].Pricing)
+	require.Equal(t, 0.000005, *out[0].Pricing.InputPrice)
+	require.Equal(t, 0.000008, *out[0].Pricing.OutputPrice)
+	require.Equal(t, 0.000001, *out[0].Pricing.CacheReadPrice)
+}
+
+func TestListPublicGPTEarlyBirdSupportedModels_MissingChannelReturnsEmpty(t *testing.T) {
+	repo := &mockChannelRepository{
+		getByIDFn: func(ctx context.Context, id int64) (*Channel, error) {
+			return nil, ErrChannelNotFound
+		},
+	}
+	svc := NewChannelService(repo, &stubGroupRepoForAvailable{}, nil, nil)
+
+	out, err := svc.ListPublicGPTEarlyBirdSupportedModels(context.Background())
+
+	require.NoError(t, err)
+	require.Empty(t, out)
+}
+
+func TestListPublicGPTEarlyBirdSupportedModels_DisabledChannelReturnsEmpty(t *testing.T) {
+	repo := &mockChannelRepository{
+		getByIDFn: func(ctx context.Context, id int64) (*Channel, error) {
+			return &Channel{ID: id, Status: StatusDisabled}, nil
+		},
+	}
+	svc := NewChannelService(repo, &stubGroupRepoForAvailable{}, nil, nil)
+
+	out, err := svc.ListPublicGPTEarlyBirdSupportedModels(context.Background())
+
+	require.NoError(t, err)
+	require.Empty(t, out)
+}
+
+func publicChannelFloatPtr(v float64) *float64 {
+	return &v
+}

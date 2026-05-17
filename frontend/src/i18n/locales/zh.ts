@@ -10,6 +10,128 @@ export default {
     login: '登录',
     getStarted: '立即开始',
     goToDashboard: '进入控制台',
+    brand: {
+      tagline: 'Codex API 中转站'
+    },
+    nav: {
+      usageQuery: '用量查询'
+    },
+    hero: {
+      badge: '{domain} · Codex API 中转',
+      title: '让 Codex 接入',
+      highlight: '更快、更稳、更可控',
+      subtitle: '专为 GPT / Codex 工作流打造的稳定中转服务，当前支持 GPT-5.5、GPT-5.4 与 GPT Image。Gemini、Claude 等更多模型已在规划接入，按量早鸟价和包月套餐灵活选择。',
+      primaryCta: '免费注册，立即体验',
+      secondaryCta: '查询 API Key 用量'
+    },
+    visual: {
+      live: '在线可用',
+      terminalLabel: '接入示例',
+      terminalTitle: '一个 Base URL 接入 Codex 工作流',
+      codexCommand: 'run',
+      response: 'gateway response ready',
+      providerTitle: '多模型调度',
+      providerDescription: '统一入口按配置分发到可用上游'
+    },
+    stats: {
+      unifiedKey: '统一密钥',
+      transport: '加密传输',
+      routing: '智能路由',
+      auto: '自动',
+      usage: '用量账单',
+      visible: '可查'
+    },
+    trust: {
+      direct: {
+        title: '国内直连体验',
+        description: '面向 Codex、Claude Code、Gemini CLI 等开发工具优化访问体验。'
+      },
+      speed: {
+        title: '高峰更顺滑',
+        description: '账号池与上游路由分层调度，减少单点限流带来的中断。'
+      },
+      security: {
+        title: '传输全程加密',
+        description: 'HTTPS 接入，密钥与管理能力分离，敏感配置集中管控。'
+      },
+      billing: {
+        title: '账单明细透明',
+        description: '按 Key 查看用量，适合个人控制成本，也适合团队分摊。'
+      }
+    },
+    reasons: {
+      eyebrow: '为什么适合开发者',
+      title: '把“能不能连上”变成“专心写代码”',
+      description: '首页会先把信任感讲清楚：接入方式简单、链路稳定、团队可控、成本可查。后续定价和开通策略也能继续往这个结构里扩。',
+      items: {
+        gateway: {
+          title: '统一 API 网关',
+          description: '一个兼容入口覆盖多类模型和客户端，切换模型不用重新改一堆配置。'
+        },
+        route: {
+          title: '上游自动切换',
+          description: '异常、限流或维护时按规则切换通道，让开发流不中断。'
+        },
+        team: {
+          title: '团队额度管理',
+          description: 'API Key、用户、配额和权限分层管理，适合多人共享一个平台。'
+        },
+        audit: {
+          title: '用量随时核对',
+          description: '请求、Token、费用和模型维度可追踪，后期对账更省心。'
+        }
+      }
+    },
+    plans: {
+      eyebrow: '开通方案',
+      title: '先把入口做轻，后面再接真实套餐',
+      description: '这里不硬写死价格，方便你后续在后台配置套餐、充值、优惠码和人工开通策略。',
+      personal: {
+        kicker: '个人开发者',
+        name: '轻量接入',
+        price: '按量',
+        priceHint: '适合先试用',
+        description: '给个人 Codex / CLI 使用的低门槛入口，重点是快速创建 Key、快速跑通。',
+        features: {
+          key: '独立 API Key',
+          codex: 'Codex 工作流接入',
+          usage: '用量自助查询',
+          quota: '余额与配额提醒'
+        }
+      },
+      team: {
+        kicker: '工作室 / 团队',
+        name: '团队通道',
+        price: '专属',
+        priceHint: '按需求开通',
+        description: '适合多人共享、需要稳定通道、成员管理和账单归集的团队场景。',
+        features: {
+          pool: '专属上游策略',
+          members: '成员与权限管理',
+          invoice: '团队账单归集',
+          support: '人工协助接入'
+        }
+      }
+    },
+    steps: {
+      eyebrow: '三步开始',
+      title: '不折腾配置，也能快速跑起来',
+      description: '按照注册、创建 Key、设置 Base URL 的顺序走，第一次接入就尽量减少心智负担。',
+      items: {
+        register: {
+          title: '注册账号',
+          description: '使用邮箱完成注册，进入控制台后即可查看可用功能。'
+        },
+        key: {
+          title: '创建 API Key',
+          description: '在 API Keys 页面新建密钥，按项目或成员分开管理。'
+        },
+        run: {
+          title: '接入 Codex',
+          description: '设置 Base URL 与 Key 后，在终端或 IDE 里继续原来的开发流程。'
+        }
+      }
+    },
     // 新增：面向用户的价值主张
     heroSubtitle: '一个密钥，畅用多个 AI 模型',
     heroDescription: '无需管理多个订阅账号，一站式接入 Claude、GPT、Gemini 等主流 AI 服务',
@@ -101,8 +223,8 @@ export default {
     },
     // CTA 区块
     cta: {
-      title: '准备好开始了吗？',
-      description: '注册即可获得免费试用额度，体验一站式 AI 服务',
+      title: '准备把 Codex 跑稳了吗？',
+      description: '先注册进入控制台，创建一个 Key，把你的 Codex 工作流接到统一入口。',
       button: '免费注册'
     },
     footer: {
@@ -683,6 +805,10 @@ export default {
     quota: '额度',
     lastUsedAt: '上次使用时间',
     useKey: '使用密钥',
+    aiChat: 'AI 对话',
+    aiImage: 'AI 绘图',
+    aiChatWithKey: '使用此密钥打开 AI 对话',
+    aiImageWithKey: '使用此密钥打开 AI 绘图',
     useKeyModal: {
       title: '使用 API 密钥',
       description: '将以下环境变量添加到您的终端配置文件或直接在终端中运行。',

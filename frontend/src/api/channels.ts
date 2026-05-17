@@ -63,6 +63,35 @@ export interface UserAvailableChannel {
   platforms: UserChannelPlatformSection[]
 }
 
+export interface PublicGPTEarlyBirdModelPricing {
+  model: string
+  platform: string
+  billing_mode: BillingMode
+  /** RMB / MTok，与管理端定价表展示单位一致。 */
+  input_price: number | null
+  /** RMB / MTok，与管理端定价表展示单位一致。 */
+  output_price: number | null
+  /** RMB / MTok，与管理端定价表展示单位一致。 */
+  cache_write_price: number | null
+  /** RMB / MTok，与管理端定价表展示单位一致。 */
+  cache_read_price: number | null
+  /** token 模式为 RMB / MTok；image 模式为 RMB / request。 */
+  image_output_price: number | null
+  /** RMB / request；图片/按次计费模式的默认单次价格。 */
+  per_request_price: number | null
+}
+
+/** 匿名获取 GPT 早鸟渠道支持模型和展示定价。 */
+export async function getPublicGPTEarlyBirdModels(options?: {
+  signal?: AbortSignal
+}): Promise<PublicGPTEarlyBirdModelPricing[]> {
+  const { data } = await apiClient.get<PublicGPTEarlyBirdModelPricing[]>(
+    '/channels/public/gpt-early-bird/models',
+    { signal: options?.signal }
+  )
+  return data
+}
+
 /** 列出当前用户可见的「可用渠道」（与 /groups/available 保持一致，返回平数组）。 */
 export async function getAvailable(options?: { signal?: AbortSignal }): Promise<UserAvailableChannel[]> {
   const { data } = await apiClient.get<UserAvailableChannel[]>('/channels/available', {
@@ -71,6 +100,6 @@ export async function getAvailable(options?: { signal?: AbortSignal }): Promise<
   return data
 }
 
-export const userChannelsAPI = { getAvailable }
+export const userChannelsAPI = { getAvailable, getPublicGPTEarlyBirdModels }
 
 export default userChannelsAPI
