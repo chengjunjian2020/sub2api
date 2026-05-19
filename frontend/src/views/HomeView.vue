@@ -287,7 +287,7 @@
                 </p>
               </div>
 
-              <div class="home-price-compare-summary">
+              <!-- <div class="home-price-compare-summary">
                 <div class="home-price-compare-summary-item">
                   <span>比官方最高便宜</span>
                   <strong>{{ officialSavingHighlight.value }}</strong>
@@ -303,7 +303,7 @@
                   <strong>{{ competitorSavingHighlight.value }}</strong>
                   <em>{{ competitorSavingHighlight.note }}</em>
                 </div>
-              </div>
+              </div> -->
             </div>
 
             <div v-if="pricingLoading" class="home-pricing-loading mt-5">
