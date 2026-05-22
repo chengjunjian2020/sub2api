@@ -608,7 +608,6 @@ type PriceField =
   | 'cache_read_price'
   | 'image_output_price'
   | 'per_request_price'
-type SavingRatioField = 'officialRatio' | 'competitorRatio'
 
 interface StatItem {
   icon: IconName
@@ -965,35 +964,6 @@ const priceComparisonRows = computed<PriceComparisonRow[]>(() =>
     .filter((row) => row.metrics.length > 0)
 )
 
-const officialSavingHighlight = computed(() =>
-  getSavingHighlight('officialRatio', pricingLoadFailed.value ? '接口暂不可用' : '等待接口价格')
-)
-
-const competitorSavingHighlight = computed(() =>
-  getSavingHighlight('competitorRatio', pricingLoadFailed.value ? '接口暂不可用' : '等待接口价格')
-)
-
-const priceSourceHighlight = computed(() => {
-  if (earlyBirdModels.value.length > 0) {
-    return {
-      value: '接口实时',
-      note: `${earlyBirdModels.value.length} 个模型已同步`
-    }
-  }
-
-  if (pricingLoading.value) {
-    return {
-      value: '读取中',
-      note: '正在连接早鸟价接口'
-    }
-  }
-
-  return {
-    value: '待恢复',
-    note: '接口恢复后自动展示'
-  }
-})
-
 const monthlyPreviewPlans: MonthlyPreviewPlan[] = [
   {
     name: 'Pro 5X',
@@ -1207,24 +1177,6 @@ function getDeltaClass(
   const diff = referencePriceCny - ownPriceCny
   if (Math.abs(diff) < 0.000001) return 'home-price-delta-even'
   return diff > 0 ? 'home-price-delta-better' : 'home-price-delta-worse'
-}
-
-function getSavingHighlight(field: SavingRatioField, emptyNote: string) {
-  const bestRow = priceComparisonMetricRows.value
-    .filter((row) => row[field] != null && Number(row[field]) >= 1.05)
-    .sort((left, right) => Number(right[field]) - Number(left[field]))[0]
-
-  if (!bestRow) {
-    return {
-      value: '--',
-      note: emptyNote
-    }
-  }
-
-  return {
-    value: formatRatioValue(bestRow[field]),
-    note: `${bestRow.modelLabel} ${bestRow.metricLabel}`
-  }
 }
 
 function getModelSubtitle(model: PublicGPTEarlyBirdModelPricing) {
