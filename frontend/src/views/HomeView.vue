@@ -105,6 +105,34 @@
               {{ siteSubtitle }}
             </p>
 
+            <div
+              v-if="showSignupBonus"
+              class="home-signup-bonus"
+              role="link"
+              tabindex="0"
+              :aria-label="signupBonusActionLabel"
+              @click="goFromSignupBonus"
+              @keydown.enter.prevent="goFromSignupBonus"
+              @keydown.space.prevent="goFromSignupBonus"
+            >
+              <span class="home-signup-bonus-icon" aria-hidden="true">
+                <Icon name="gift" size="sm" />
+              </span>
+              <span class="home-signup-bonus-copy">
+                <span class="home-signup-bonus-kicker">注册福利</span>
+                <strong>注册即送 <span class="home-signup-bonus-amount">$6</span> 额度</strong>
+                <em>GPT / Codex 早鸟模型可用</em>
+              </span>
+              <button
+                type="button"
+                class="home-signup-bonus-close"
+                aria-label="关闭注册福利提示"
+                @click.stop="showSignupBonus = false"
+              >
+                <Icon name="x" size="xs" />
+              </button>
+            </div>
+
             <div class="mt-8 flex flex-col gap-3 sm:flex-row">
               <router-link
                 :to="isAuthenticated ? dashboardPath : '/login'"
@@ -271,170 +299,135 @@
             <p class="home-section-kicker">价格优势</p>
             <h2 class="home-section-title mt-4">早鸟价，对比看得见</h2>
             <p class="mt-4 text-sm leading-7 text-[#b9c8bd]">
-              CodexHub 早鸟价来自公开接口，OpenAI 官方价与同行标准价分开维护，按同模型同单位折算后对比。
+              左侧为 OpenAI 当前官方公开价格，单位 USD；右侧为 CodexHub 早鸟价格，单位 RMB。
             </p>
           </div>
 
           <div class="home-price-compare-board mx-auto mt-10 max-w-7xl">
             <div class="home-price-compare-hero">
               <div class="min-w-0">
-                <span class="home-price-compare-label">Official vs CodexHub vs Peer</span>
+                <span class="home-price-compare-label">OpenAI USD vs Early Bird RMB</span>
                 <h3 class="mt-3 text-2xl font-black text-white sm:text-3xl">
-                  同模型、同单位，直接看成本差距
+                  两张表并排看，官方价与早鸟价一眼分明
                 </h3>
                 <p class="mt-3 max-w-2xl text-sm leading-7 text-[#b9c8bd]">
-                  展示 GPT / Codex 高频模型的输入、输出、缓存读、图像输出与单张生成价格，CodexHub 列始终读取当前早鸟接口。
+                  OpenAI 官方价来自本页可配置价格表，CodexHub 早鸟价读取当前公开接口；不再展示同行价、相差倍数和同行标准价字段。
                 </p>
               </div>
-
-              <!-- <div class="home-price-compare-summary">
-                <div class="home-price-compare-summary-item">
-                  <span>比官方最高便宜</span>
-                  <strong>{{ officialSavingHighlight.value }}</strong>
-                  <em>{{ officialSavingHighlight.note }}</em>
-                </div>
-                <div class="home-price-compare-summary-item home-price-compare-summary-primary">
-                  <span>CodexHub 价格源</span>
-                  <strong>{{ priceSourceHighlight.value }}</strong>
-                  <em>{{ priceSourceHighlight.note }}</em>
-                </div>
-                <div class="home-price-compare-summary-item">
-                  <span>比同行最高便宜</span>
-                  <strong>{{ competitorSavingHighlight.value }}</strong>
-                  <em>{{ competitorSavingHighlight.note }}</em>
-                </div>
-              </div> -->
             </div>
 
             <div v-if="pricingLoading" class="home-pricing-loading mt-5">
               正在读取早鸟价格...
             </div>
-            <div v-else class="home-price-table-wrap">
-              <table class="home-price-compare-table">
-                <thead>
-                  <tr>
-                    <th>模型</th>
-                    <th>计费项</th>
-                    <th>OpenAI 官方价</th>
-                    <th>CodexHub 早鸟价 RMB</th>
-                    <th>同行标准价</th>
-                    <th>对官方差距</th>
-                    <th>对同行差距</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr
-                    v-for="row in priceComparisonRows"
-                    :key="row.model"
-                  >
-                    <td class="home-price-model-cell">
-                      <span class="home-price-model-name">{{ row.modelLabel }}</span>
-                      <small>{{ row.metrics.length }} 项价格</small>
-                    </td>
-                    <td>
-                      <div class="home-price-stack">
-                        <div
-                          v-for="item in row.metrics"
-                          :key="item.id"
-                          class="home-price-stack-line home-price-stack-line-metric"
+            <div v-else class="home-price-boards">
+              <article class="home-price-board home-price-board-official">
+                <div class="home-price-board-head">
+                  <div class="home-price-board-topline">
+                    <span class="home-price-board-badge">OpenAI Official</span>
+                    <span class="home-price-board-currency">USD</span>
+                  </div>
+                  <h3 class="home-price-board-title">OpenAI 当前官方价格</h3>
+                  <p class="home-price-board-note">左侧表格为美元价格，可在本页官方价配置中维护。</p>
+                </div>
+                <div class="home-price-table-shell">
+                  <table class="home-price-split-table">
+                    <thead>
+                      <tr>
+                        <th>模型</th>
+                        <th>计费项</th>
+                        <th>官方价</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <template
+                        v-for="row in priceComparisonRows"
+                        :key="`official-${row.model}`"
+                      >
+                        <tr
+                          v-for="(item, metricIndex) in row.metrics"
+                          :key="`official-${item.id}`"
                         >
-                          <span class="home-price-metric">{{ item.metricLabel }}</span>
-                          <small>{{ item.unit }}</small>
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="home-price-stack">
-                        <div
-                          v-for="item in row.metrics"
-                          :key="`${item.id}-official`"
-                          class="home-price-stack-line"
-                        >
-                          <template v-if="item.officialPrice != null">
-                            <span class="home-price-source">
+                          <td
+                            v-if="metricIndex === 0"
+                            class="home-price-model-cell"
+                            :rowspan="row.metrics.length"
+                          >
+                            <span class="home-price-model-name">{{ row.modelLabel }}</span>
+                            <small>{{ row.metrics.length }} 项</small>
+                          </td>
+                          <td class="home-price-metric-cell">
+                            <span class="home-price-metric">{{ item.metricLabel }}</span>
+                            <small>{{ item.unit }}</small>
+                          </td>
+                          <td class="home-price-value-cell">
+                            <span class="home-price-price home-price-price-usd">
                               {{ formatReferencePrice(item.officialPrice, openAIOfficialPricingJson.currency) }}
                             </span>
-                            <small
-                              v-if="openAIOfficialPricingJson.currency === 'USD'"
-                              class="home-price-converted"
-                            >
-                              ≈ {{ formatReferenceConverted(item.officialPrice, openAIOfficialPricingJson.currency) }}
-                            </small>
-                          </template>
-                          <span v-else class="home-price-source home-price-empty">-</span>
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="home-price-stack">
-                        <div
-                          v-for="item in row.metrics"
-                          :key="`${item.id}-own`"
-                          class="home-price-stack-line"
+                          </td>
+                        </tr>
+                      </template>
+                    </tbody>
+                  </table>
+                </div>
+              </article>
+
+              <div class="home-price-vs" aria-label="OpenAI 官方价对比 CodexHub 早鸟价">
+                <span class="home-price-vs-node">
+                  <strong>VS</strong>
+                  <small>USD / RMB</small>
+                </span>
+              </div>
+
+              <article class="home-price-board home-price-board-early">
+                <div class="home-price-board-head">
+                  <div class="home-price-board-topline">
+                    <span class="home-price-board-badge">CodexHub Early Bird</span>
+                    <span class="home-price-board-currency">RMB</span>
+                  </div>
+                  <h3 class="home-price-board-title">CodexHub 早鸟价格</h3>
+                  <p class="home-price-board-note">右侧表格为人民币价格，也就是当前对外展示的早鸟价。</p>
+                </div>
+                <div class="home-price-table-shell">
+                  <table class="home-price-split-table">
+                    <thead>
+                      <tr>
+                        <th>模型</th>
+                        <th>计费项</th>
+                        <th>早鸟价</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <template
+                        v-for="row in priceComparisonRows"
+                        :key="`early-${row.model}`"
+                      >
+                        <tr
+                          v-for="(item, metricIndex) in row.metrics"
+                          :key="`early-${item.id}`"
                         >
-                          <span class="home-price-current">
-                            {{ formatComparisonOwnPrice(item.ownPrice) }}
-                          </span>
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="home-price-stack">
-                        <div
-                          v-for="item in row.metrics"
-                          :key="`${item.id}-peer`"
-                          class="home-price-stack-line"
-                        >
-                          <template v-if="item.competitorPrice != null">
-                            <span class="home-price-source">
-                              {{ formatReferencePrice(item.competitorPrice, peerStandardPricingJson.currency) }}
+                          <td
+                            v-if="metricIndex === 0"
+                            class="home-price-model-cell"
+                            :rowspan="row.metrics.length"
+                          >
+                            <span class="home-price-model-name">{{ row.modelLabel }}</span>
+                            <small>{{ row.metrics.length }} 项</small>
+                          </td>
+                          <td class="home-price-metric-cell">
+                            <span class="home-price-metric">{{ item.metricLabel }}</span>
+                            <small>{{ item.unit }}</small>
+                          </td>
+                          <td class="home-price-value-cell">
+                            <span class="home-price-price home-price-price-rmb">
+                              {{ formatComparisonOwnPrice(item.ownPrice) }}
                             </span>
-                            <small
-                              v-if="peerStandardPricingJson.currency === 'USD'"
-                              class="home-price-converted"
-                            >
-                              ≈ {{ formatReferenceConverted(item.competitorPrice, peerStandardPricingJson.currency) }}
-                            </small>
-                          </template>
-                          <span v-else class="home-price-source home-price-empty">-</span>
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="home-price-stack">
-                        <div
-                          v-for="item in row.metrics"
-                          :key="`${item.id}-official-delta`"
-                          class="home-price-stack-line"
-                        >
-                          <span
-                            class="home-price-delta"
-                            :class="getDeltaClass(item.officialPrice, item.ownPrice, openAIOfficialPricingJson.currency)"
-                          >
-                            {{ formatPriceDelta(item.officialPrice, item.ownPrice, openAIOfficialPricingJson.currency) }}
-                          </span>
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="home-price-stack">
-                        <div
-                          v-for="item in row.metrics"
-                          :key="`${item.id}-peer-delta`"
-                          class="home-price-stack-line"
-                        >
-                          <span
-                            class="home-price-delta"
-                            :class="getDeltaClass(item.competitorPrice, item.ownPrice, peerStandardPricingJson.currency)"
-                          >
-                            {{ formatPriceDelta(item.competitorPrice, item.ownPrice, peerStandardPricingJson.currency) }}
-                          </span>
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+                          </td>
+                        </tr>
+                      </template>
+                    </tbody>
+                  </table>
+                </div>
+              </article>
             </div>
           </div>
         </div>
@@ -589,6 +582,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore, useAppStore } from '@/stores'
 import {
@@ -665,7 +659,6 @@ interface PriceComparisonBenchmark {
   metricLabel: string
   unit: string
   officialPrice: number | null
-  competitorPrice: number | null
 }
 
 interface PriceComparisonCatalog {
@@ -675,8 +668,6 @@ interface PriceComparisonCatalog {
 
 interface PriceComparisonMetricRow extends PriceComparisonBenchmark {
   ownPrice: number | null
-  officialRatio: number | null
-  competitorRatio: number | null
 }
 
 interface PriceComparisonRow {
@@ -687,6 +678,7 @@ interface PriceComparisonRow {
 
 const { t } = useI18n()
 
+const router = useRouter()
 const authStore = useAuthStore()
 const appStore = useAppStore()
 const { copied: contactCopied, copyToClipboard } = useClipboard()
@@ -725,20 +717,27 @@ const isDark = ref(document.documentElement.classList.contains('dark'))
 const pricingMode = ref<PricingMode>('metered')
 const pricingLoading = ref(false)
 const pricingLoadFailed = ref(false)
+const showSignupBonus = ref(true)
 const earlyBirdModels = ref<PublicGPTEarlyBirdModelPricing[]>([])
 
-const USD_TO_CNY_RATE = 7.2
 const contactWechat = 'cqcjjjava'
 const contactTopics = ['接入评估', '稳定性排查', '模型路由', '额度方案', '技术交流']
 
 const isAuthenticated = computed(() => authStore.isAuthenticated)
 const isAdmin = computed(() => authStore.isAdmin)
 const dashboardPath = computed(() => (isAdmin.value ? '/admin/dashboard' : '/dashboard'))
+const signupBonusActionLabel = computed(() =>
+  isAuthenticated.value ? '进入控制台查看早鸟价格' : '登录领取注册福利'
+)
 const userInitial = computed(() => {
   const user = authStore.user
   if (!user || !user.email) return ''
   return user.email.charAt(0).toUpperCase()
 })
+
+function goFromSignupBonus() {
+  router.push(isAuthenticated.value ? dashboardPath.value : '/login')
+}
 
 const currentYear = computed(() => new Date().getFullYear())
 
@@ -824,34 +823,6 @@ const openAIOfficialPricingJson: PriceComparisonCatalog = {
   }
 }
 
-const peerStandardPricingJson: PriceComparisonCatalog = {
-  currency: 'CNY',
-  models: {
-    'gpt-5.5': {
-      input_price: 18.8,
-      output_price: 72,
-      cache_read_price: 2.4
-    },
-    'gpt-5.4': {
-      input_price: 12.6,
-      output_price: 43.8,
-      cache_read_price: 1.6
-    },
-    'gpt-5.3-codex': {
-      input_price: 8.9,
-      output_price: 39.5,
-      cache_read_price: 1.15
-    },
-    'gpt-image-2': {
-      input_price: 22,
-      output_price: 88,
-      cache_read_price: 5.6,
-      image_output_price: 96,
-      per_request_price: 0.3
-    }
-  }
-}
-
 const priceComparisonModelsJson: Array<{
   model: string
   label: string
@@ -888,16 +859,12 @@ const priceComparisonModelsJson: Array<{
     model: 'gpt-image-2',
     label: 'GPT Image 2',
     metrics: [
-      { field: 'input_price', label: '文本输入', unit: '/ MTok' },
-      { field: 'output_price', label: '文本输出', unit: '/ MTok' },
-      { field: 'cache_read_price', label: '缓存读', unit: '/ MTok' },
-      { field: 'image_output_price', label: '图像输出', unit: '/ 1M image tokens' },
-      { field: 'per_request_price', label: '单张生成', unit: '/ 张' }
+      { field: 'per_request_price', label: '单张图片', unit: '/ 张' }
     ]
   }
 ]
 
-const priceComparisonItems: Array<Omit<PriceComparisonBenchmark, 'officialPrice' | 'competitorPrice'>> =
+const priceComparisonItems: Array<Omit<PriceComparisonBenchmark, 'officialPrice'>> =
   priceComparisonModelsJson.flatMap((model) =>
     model.metrics.map((metric) => ({
       id: `${model.model}-${metric.field}`,
@@ -911,8 +878,7 @@ const priceComparisonItems: Array<Omit<PriceComparisonBenchmark, 'officialPrice'
 
 const priceComparisonBenchmarks: PriceComparisonBenchmark[] = priceComparisonItems.map((item) => ({
   ...item,
-  officialPrice: openAIOfficialPricingJson.models[item.model]?.[item.metric] ?? null,
-  competitorPrice: peerStandardPricingJson.models[item.model]?.[item.metric] ?? null
+  officialPrice: openAIOfficialPricingJson.models[item.model]?.[item.metric] ?? null
 }))
 
 const effectiveEarlyBirdModels = computed(() =>
@@ -939,17 +905,7 @@ const priceComparisonMetricRows = computed<PriceComparisonMetricRow[]>(() =>
 
     return {
       ...benchmark,
-      ownPrice,
-      officialRatio: getSavingRatio(
-        benchmark.officialPrice,
-        ownPrice,
-        openAIOfficialPricingJson.currency
-      ),
-      competitorRatio: getSavingRatio(
-        benchmark.competitorPrice,
-        ownPrice,
-        peerStandardPricingJson.currency
-      )
+      ownPrice
     }
   })
 )
@@ -1085,23 +1041,9 @@ function formatCny(value: number | null | undefined) {
   return `¥${fractionDigits === 0 ? formatted : formatted.replace(/\.?0+$/, '')}`
 }
 
-function toCny(usd: number | null | undefined) {
-  if (usd == null) return null
-  return usd * USD_TO_CNY_RATE
-}
-
-function referencePriceToCny(value: number | null | undefined, currency: PriceCurrency) {
-  if (value == null) return null
-  return currency === 'USD' ? toCny(value) : value
-}
-
 function formatReferencePrice(value: number | null | undefined, currency: PriceCurrency) {
   if (value == null) return '-'
   return currency === 'USD' ? formatUsd(value) : formatCny(value)
-}
-
-function formatReferenceConverted(value: number | null | undefined, currency: PriceCurrency) {
-  return formatCny(referencePriceToCny(value, currency))
 }
 
 function formatComparisonOwnPrice(value: number | null | undefined) {
@@ -1111,7 +1053,7 @@ function formatComparisonOwnPrice(value: number | null | undefined) {
 
 function readModelPrice(model: PublicGPTEarlyBirdModelPricing | undefined, field: PriceField) {
   if (!model) return null
-  if (field === 'per_request_price' && model.billing_mode === 'image') {
+  if (field === 'per_request_price' && isImageModel(model)) {
     const value = model.per_request_price ?? model.image_output_price
     return typeof value === 'number' ? value : null
   }
@@ -1119,68 +1061,12 @@ function readModelPrice(model: PublicGPTEarlyBirdModelPricing | undefined, field
   return typeof value === 'number' ? value : null
 }
 
-function getSavingRatio(
-  referencePrice: number | null,
-  ownPriceCny: number | null,
-  currency: PriceCurrency
-) {
-  if (ownPriceCny == null || ownPriceCny <= 0 || referencePrice == null || referencePrice <= 0) {
-    return null
-  }
-  const referencePriceCny = referencePriceToCny(referencePrice, currency)
-  return referencePriceCny == null ? null : referencePriceCny / ownPriceCny
-}
-
-function formatRatioValue(ratio: number | null) {
-  if (ratio == null || ratio < 1.05) return '--'
-  const fixed = ratio >= 10 ? ratio.toFixed(0) : ratio.toFixed(1)
-  return `${fixed.replace(/\.0$/, '')} 倍`
-}
-
-function formatPriceDelta(
-  referencePrice: number | null,
-  ownPriceCny: number | null,
-  currency: PriceCurrency
-) {
-  if (referencePrice == null) return '无可比价'
-  if (ownPriceCny == null) return pricingLoadFailed.value ? '接口异常' : '待接口'
-
-  const referencePriceCny = referencePriceToCny(referencePrice, currency)
-  if (referencePriceCny == null) return '无可比价'
-  if (ownPriceCny === 0) {
-    return referencePriceCny > 0 ? `便宜 ${formatCny(referencePriceCny)} · 低至 ¥0` : '持平'
-  }
-
-  const diff = referencePriceCny - ownPriceCny
-  if (Math.abs(diff) < 0.000001) return '持平'
-
-  if (diff > 0) {
-    const ratio = referencePriceCny / ownPriceCny
-    const ratioText = ratio >= 1.05 ? ` · ${formatRatioValue(ratio)}` : ''
-    return `便宜 ${formatCny(diff)}${ratioText}`
-  }
-
-  const ratio = ownPriceCny / referencePriceCny
-  const ratioText = ratio >= 1.05 ? ` · ${formatRatioValue(ratio)}` : ''
-  return `贵 ${formatCny(Math.abs(diff))}${ratioText}`
-}
-
-function getDeltaClass(
-  referencePrice: number | null,
-  ownPriceCny: number | null,
-  currency: PriceCurrency
-) {
-  if (referencePrice == null) return 'home-price-delta-pending'
-  if (ownPriceCny == null) return 'home-price-delta-pending'
-  const referencePriceCny = referencePriceToCny(referencePrice, currency)
-  if (referencePriceCny == null) return 'home-price-delta-pending'
-  const diff = referencePriceCny - ownPriceCny
-  if (Math.abs(diff) < 0.000001) return 'home-price-delta-even'
-  return diff > 0 ? 'home-price-delta-better' : 'home-price-delta-worse'
+function isImageModel(model: PublicGPTEarlyBirdModelPricing) {
+  return model.billing_mode === 'image' || normalizeModelName(model.model).includes('image')
 }
 
 function getModelSubtitle(model: PublicGPTEarlyBirdModelPricing) {
-  if (model.billing_mode === 'image') return '图像生成模型'
+  if (isImageModel(model)) return '图像生成模型'
   if (normalizeModelName(model.model).includes('codex')) return '专为代码生成优化'
   if (normalizeModelName(model.model).includes('5.5')) return '最新旗舰模型'
   if (normalizeModelName(model.model).includes('5.4')) return '稳定通用模型'
@@ -1188,13 +1074,13 @@ function getModelSubtitle(model: PublicGPTEarlyBirdModelPricing) {
 }
 
 function getModelIcon(model: PublicGPTEarlyBirdModelPricing): IconName {
-  if (model.billing_mode === 'image') return 'sparkles'
+  if (isImageModel(model)) return 'sparkles'
   if (normalizeModelName(model.model).includes('codex')) return 'terminal'
   return 'cpu'
 }
 
 function getModelTone(model: PublicGPTEarlyBirdModelPricing) {
-  if (model.billing_mode === 'image') return 'bg-cyan-400/15 text-cyan-200'
+  if (isImageModel(model)) return 'bg-cyan-400/15 text-cyan-200'
   if (normalizeModelName(model.model).includes('5.5')) return 'bg-lime-400/15 text-lime-200'
   if (normalizeModelName(model.model).includes('codex')) return 'bg-violet-400/15 text-violet-200'
   return 'bg-emerald-400/15 text-emerald-200'
@@ -1202,16 +1088,16 @@ function getModelTone(model: PublicGPTEarlyBirdModelPricing) {
 
 function getModelBadge(model: PublicGPTEarlyBirdModelPricing) {
   if (normalizeModelName(model.model).includes('5.5')) return '旗舰'
-  if (model.billing_mode === 'image') return 'Image'
+  if (isImageModel(model)) return 'Image'
   return ''
 }
 
 function getPriceRows(model: PublicGPTEarlyBirdModelPricing): MeteredPriceRow[] {
-  if (model.billing_mode === 'image') {
+  if (isImageModel(model)) {
     const imagePrice = model.per_request_price ?? model.image_output_price
     return [
       {
-        label: '单张',
+        label: '单张图片',
         value: formatCny(imagePrice),
         unit: '/ 张'
       }
@@ -1398,6 +1284,268 @@ onMounted(() => {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+}
+
+.home-signup-bonus {
+  position: fixed;
+  top: clamp(5.05rem, 7.2vh, 5.85rem);
+  left: 50%;
+  z-index: 45;
+  display: inline-flex;
+  width: min(31rem, calc(100vw - 2rem));
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.72rem;
+  overflow: hidden;
+  border: 1px solid rgba(156, 255, 201, 0.24);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(4, 34, 23, 0.96), rgba(18, 20, 15, 0.94)),
+    rgba(4, 14, 10, 0.94);
+  padding: 0.5rem 0.5rem 0.5rem 0.72rem;
+  box-shadow:
+    0 0 0 1px rgba(125, 255, 197, 0.08),
+    0 14px 38px rgba(0, 0, 0, 0.32),
+    0 0 26px rgba(72, 255, 160, 0.1);
+  cursor: pointer;
+  pointer-events: auto;
+  transform: translateX(-50%);
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
+  backdrop-filter: blur(16px);
+}
+
+.home-signup-bonus:hover,
+.home-signup-bonus:focus-visible {
+  border-color: rgba(217, 255, 111, 0.42);
+  box-shadow:
+    0 0 0 1px rgba(125, 255, 197, 0.12),
+    0 16px 44px rgba(0, 0, 0, 0.38),
+    0 0 34px rgba(217, 255, 111, 0.16);
+  outline: none;
+  transform: translateX(-50%) translateY(-1px);
+}
+
+.home-signup-bonus::before {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0.18rem;
+  background: linear-gradient(180deg, #b8ff79, #54f1aa);
+  content: "";
+}
+
+.home-signup-bonus::after {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(131, 255, 186, 0.28), transparent);
+  content: "";
+}
+
+.home-signup-bonus-icon {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  width: 2.12rem;
+  height: 2.12rem;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid rgba(184, 255, 121, 0.36);
+  border-radius: 8px;
+  background:
+    linear-gradient(145deg, rgba(184, 255, 121, 0.18), rgba(84, 241, 170, 0.1)),
+    rgba(156, 255, 201, 0.1);
+  color: #d9ff6f;
+  animation: home-gift-float 2.6s ease-in-out infinite;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 0 18px rgba(217, 255, 111, 0.16);
+}
+
+.home-signup-bonus-icon::after {
+  position: absolute;
+  inset: -30% auto -30% -55%;
+  width: 45%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.52), transparent);
+  content: "";
+  transform: rotate(18deg);
+  animation: home-gift-shine 2.8s ease-in-out infinite;
+}
+
+.home-signup-bonus-icon svg {
+  position: relative;
+  z-index: 1;
+  filter: drop-shadow(0 0 8px rgba(217, 255, 111, 0.34));
+  animation: home-gift-pop 1.9s ease-in-out infinite;
+}
+
+.home-signup-bonus-copy {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  min-width: 0;
+  flex: 1 1 auto;
+  grid-template-columns: auto 1fr;
+  align-items: baseline;
+  gap: 0.12rem 0.48rem;
+}
+
+.home-signup-bonus-kicker {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  min-height: 1.22rem;
+  border: 1px solid rgba(156, 255, 201, 0.18);
+  border-radius: 9999px;
+  background: rgba(84, 241, 170, 0.1);
+  color: #c9ffdc;
+  padding: 0 0.42rem;
+  font-size: 0.72rem;
+  font-weight: 950;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  text-shadow: 0 0 10px rgba(156, 255, 201, 0.22);
+  white-space: nowrap;
+}
+
+.home-signup-bonus strong {
+  position: relative;
+  z-index: 1;
+  color: #f5fff8;
+  font-size: 0.98rem;
+  font-weight: 950;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.home-signup-bonus-amount {
+  color: #d9ff6f;
+  font-size: 1.36em;
+  text-shadow:
+    0 0 14px rgba(217, 255, 111, 0.28),
+    0 0 22px rgba(125, 255, 197, 0.16);
+}
+
+.home-signup-bonus em {
+  position: relative;
+  z-index: 1;
+  grid-column: 1 / -1;
+  color: #d7f7e1;
+  font-size: 0.76rem;
+  font-style: normal;
+  font-weight: 900;
+  line-height: 1.35;
+  text-shadow: 0 0 12px rgba(125, 255, 197, 0.16);
+  white-space: nowrap;
+}
+
+.home-signup-bonus-close {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  width: 1.8rem;
+  height: 1.8rem;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.055);
+  color: #b9c8bd;
+  cursor: pointer;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease,
+    color 0.18s ease;
+}
+
+.home-signup-bonus-close:hover {
+  border-color: rgba(156, 255, 201, 0.24);
+  background: rgba(156, 255, 201, 0.12);
+  color: #f5fff8;
+}
+
+@media (max-width: 640px) {
+  .home-signup-bonus {
+    top: 4.9rem;
+    right: 1rem;
+    left: 1rem;
+    width: auto;
+    gap: 0.55rem;
+    padding: 0.55rem;
+    transform: none;
+  }
+
+  .home-signup-bonus:hover,
+  .home-signup-bonus:focus-visible {
+    transform: translateY(-1px);
+  }
+
+  .home-signup-bonus-copy {
+    grid-template-columns: 1fr;
+    gap: 0.1rem;
+  }
+
+  .home-signup-bonus strong {
+    font-size: 0.98rem;
+  }
+
+  .home-signup-bonus em {
+    width: 100%;
+    white-space: normal;
+  }
+}
+
+@keyframes home-gift-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-0.16rem);
+  }
+}
+
+@keyframes home-gift-pop {
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+
+  45% {
+    transform: scale(1.08) rotate(-4deg);
+  }
+
+  70% {
+    transform: scale(1.02) rotate(3deg);
+  }
+}
+
+@keyframes home-gift-shine {
+  0%,
+  46% {
+    left: -55%;
+  }
+
+  74%,
+  100% {
+    left: 112%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-signup-bonus-icon,
+  .home-signup-bonus-icon::after,
+  .home-signup-bonus-icon svg {
+    animation: none;
+  }
 }
 
 .home-mini-stat,
@@ -1834,242 +1982,284 @@ onMounted(() => {
   text-transform: uppercase;
 }
 
-.home-price-compare-summary {
+.home-price-boards {
   display: grid;
-  gap: 0.75rem;
+  gap: 1rem;
+  margin-top: 1.15rem;
 }
 
-.home-price-compare-summary-item {
+.home-price-board {
   min-width: 0;
-  border: 1px solid rgba(255, 255, 255, 0.09);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
-  background: rgba(0, 0, 0, 0.2);
-  padding: 0.85rem;
+  background: rgba(4, 14, 10, 0.56);
 }
 
-.home-price-compare-summary-primary {
-  border-color: rgba(125, 255, 197, 0.3);
+.home-price-board-official {
+  border-color: rgba(137, 174, 255, 0.22);
   background:
-    radial-gradient(circle at 88% 10%, rgba(125, 255, 197, 0.18), transparent 7rem),
-    rgba(7, 63, 42, 0.24);
+    radial-gradient(circle at 84% 0%, rgba(93, 140, 255, 0.16), transparent 14rem),
+    rgba(4, 14, 10, 0.58);
 }
 
-.home-price-compare-summary-item span {
-  display: block;
-  color: #9eafa4;
-  font-size: 0.72rem;
-  font-weight: 800;
+.home-price-board-early {
+  border-color: rgba(125, 255, 197, 0.22);
+  background:
+    radial-gradient(circle at 84% 0%, rgba(125, 255, 197, 0.17), transparent 14rem),
+    rgba(4, 14, 10, 0.6);
 }
 
-.home-price-compare-summary-item strong {
-  display: block;
-  margin-top: 0.3rem;
+.home-price-vs {
+  position: relative;
+  display: flex;
+  min-height: 4.9rem;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.home-price-vs::before {
+  position: absolute;
+  inset: 50% 0 auto;
+  height: 1px;
+  background:
+    linear-gradient(90deg, transparent, rgba(159, 189, 255, 0.55), rgba(141, 255, 189, 0.64), transparent);
+  content: "";
+}
+
+.home-price-vs-node {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: 4.35rem;
+  height: 4.35rem;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(125, 255, 197, 0.32);
+  border-radius: 9999px;
+  background:
+    linear-gradient(145deg, rgba(16, 35, 59, 0.98), rgba(3, 42, 25, 0.98)),
+    rgba(4, 14, 10, 0.96);
+  box-shadow:
+    0 0 0 0.55rem rgba(4, 14, 10, 0.72),
+    0 0 0 0.62rem rgba(125, 255, 197, 0.08),
+    0 16px 34px rgba(0, 0, 0, 0.28);
   color: #f5fff8;
-  font-size: 1.6rem;
+}
+
+.home-price-vs-node::before {
+  position: absolute;
+  inset: 0.42rem;
+  border: 1px solid rgba(159, 189, 255, 0.24);
+  border-radius: inherit;
+  content: "";
+}
+
+.home-price-vs-node strong {
+  position: relative;
+  z-index: 1;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 1.12rem;
   font-weight: 950;
+  letter-spacing: 0;
   line-height: 1;
 }
 
-.home-price-compare-summary-primary strong {
+.home-price-vs-node small {
+  position: relative;
+  z-index: 1;
+  margin-top: 0.28rem;
   color: #9cffc9;
+  font-size: 0.54rem;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
-.home-price-compare-summary-item em {
-  display: block;
-  margin-top: 0.35rem;
-  color: #a9c8b6;
-  font-size: 0.75rem;
-  font-style: normal;
-  font-weight: 800;
+.home-price-board-head {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 1rem 1rem 0.9rem;
 }
 
-.home-price-table-wrap {
-  margin-top: 1.15rem;
-  max-height: 31.25rem;
+.home-price-board-topline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+}
+
+.home-price-board-badge,
+.home-price-board-currency {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.75rem;
+  border-radius: 9999px;
+  padding: 0 0.72rem;
+  font-size: 0.7rem;
+  font-weight: 950;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.home-price-board-badge {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.055);
+  color: #dbe7ff;
+}
+
+.home-price-board-currency {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.18);
+  color: #ffffff;
+}
+
+.home-price-board-early .home-price-board-badge {
+  color: #a8ffd0;
+}
+
+.home-price-board-title {
+  margin-top: 0.85rem;
+  color: #f5fff8;
+  font-size: 1.2rem;
+  font-weight: 950;
+  line-height: 1.25;
+}
+
+.home-price-board-note {
+  margin-top: 0.45rem;
+  color: #9eafa4;
+  font-size: 0.8rem;
+  font-weight: 750;
+  line-height: 1.7;
+}
+
+.home-price-table-shell {
+  max-height: 34rem;
   overflow: auto;
-  border: 1px solid rgba(125, 255, 197, 0.12);
-  border-radius: 8px;
-  background: rgba(4, 14, 10, 0.48);
 }
 
-.home-price-compare-table {
+.home-price-split-table {
   width: 100%;
-  min-width: 76rem;
+  min-width: 100%;
   border-collapse: separate;
   border-spacing: 0;
   color: #d8e7dc;
   font-size: 0.82rem;
+  table-layout: fixed;
 }
 
-.home-price-compare-table th,
-.home-price-compare-table td {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.075);
-  padding: 0.85rem 0.9rem;
+.home-price-split-table th,
+.home-price-split-table td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  padding: 0.82rem 0.65rem;
   text-align: left;
-  vertical-align: top;
+  vertical-align: middle;
 }
 
-.home-price-compare-table th {
+.home-price-split-table th {
   position: sticky;
   top: 0;
   z-index: 1;
-  background:
-    linear-gradient(180deg, rgba(20, 44, 31, 0.98), rgba(10, 27, 18, 0.98));
-  color: #9cffc9;
-  font-size: 0.72rem;
+  background: rgba(8, 24, 17, 0.98);
+  color: #b9c8bd;
+  font-size: 0.7rem;
   font-weight: 950;
+  text-transform: uppercase;
   white-space: nowrap;
 }
 
-.home-price-compare-table tbody tr {
-  background: rgba(255, 255, 255, 0.025);
+.home-price-split-table tbody tr {
+  background: rgba(255, 255, 255, 0.02);
 }
 
-.home-price-compare-table tbody tr:nth-child(odd) {
-  background: rgba(255, 255, 255, 0.045);
+.home-price-split-table tbody tr:nth-child(odd) {
+  background: rgba(255, 255, 255, 0.04);
 }
 
-.home-price-compare-table tbody tr:hover {
-  background: rgba(61, 215, 159, 0.08);
+.home-price-split-table tbody tr:hover {
+  background: rgba(125, 255, 197, 0.075);
 }
 
-.home-price-compare-table tbody tr:last-child td {
+.home-price-split-table tbody tr:last-child td {
   border-bottom: 0;
 }
 
-.home-price-compare-table td:nth-child(3),
-.home-price-compare-table td:nth-child(5) {
-  color: #f5fff8;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  font-weight: 850;
-  white-space: nowrap;
-}
-
 .home-price-model-cell {
-  min-width: 9.5rem;
+  width: 31%;
+  border-right: 1px solid rgba(255, 255, 255, 0.065);
+  background: rgba(0, 0, 0, 0.12);
 }
 
 .home-price-model-cell small {
   display: block;
-  margin-top: 0.4rem;
+  margin-top: 0.38rem;
   color: #8fb3a1;
-  font-size: 0.72rem;
-  font-weight: 800;
-}
-
-.home-price-stack {
-  display: grid;
-  gap: 0.45rem;
-}
-
-.home-price-stack-line {
-  display: flex;
-  min-height: 2.7rem;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.home-price-stack-line-metric {
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.035);
-  padding: 0.45rem 0.6rem;
-}
-
-.home-price-source {
-  display: block;
-  color: #f5fff8;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  font-weight: 900;
-}
-
-.home-price-empty {
-  color: #6f8378;
-}
-
-.home-price-converted {
-  display: block;
-  margin-top: 0.25rem;
-  color: #8fb3a1;
-  font-family: inherit;
-  font-size: 0.68rem;
-  font-weight: 800;
-}
-
-.home-price-current {
-  color: #9cffc9;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  font-size: 0.94rem;
-  font-weight: 950;
-  white-space: nowrap;
+  font-size: 0.7rem;
+  font-weight: 850;
 }
 
 .home-price-model-name {
   display: inline-flex;
-  min-width: 7.25rem;
+  max-width: 100%;
   color: #ffffff;
   font-weight: 950;
-  white-space: nowrap;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.home-price-metric-cell {
+  width: 34%;
+  min-width: 0;
 }
 
 .home-price-metric {
   display: block;
   color: #effff7;
-  font-weight: 850;
-  white-space: nowrap;
+  font-weight: 900;
+  overflow-wrap: anywhere;
 }
 
 .home-price-metric + small {
   display: block;
-  margin-top: 0.22rem;
+  margin-top: 0.24rem;
   color: #7f9288;
   font-size: 0.68rem;
   font-weight: 800;
+  line-height: 1.35;
+}
+
+.home-price-value-cell {
+  width: 35%;
+  min-width: 0;
+  text-align: right;
   white-space: nowrap;
 }
 
-.home-price-delta {
+.home-price-price {
   display: inline-flex;
-  align-items: center;
-  min-height: 1.8rem;
-  border-radius: 9999px;
-  padding: 0 0.65rem;
-  font-size: 0.72rem;
+  justify-content: flex-end;
+  min-width: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.94rem;
   font-weight: 950;
-  white-space: nowrap;
+  letter-spacing: 0;
+  line-height: 1.2;
 }
 
-.home-price-delta-better {
-  border: 1px solid rgba(125, 255, 197, 0.2);
-  background: rgba(61, 215, 159, 0.12);
-  color: #9cffc9;
+.home-price-price-usd {
+  color: #9fbdff;
+  text-shadow: 0 0 18px rgba(110, 156, 255, 0.22);
 }
 
-.home-price-delta-worse {
-  border: 1px solid rgba(255, 111, 111, 0.28);
-  background: rgba(255, 91, 91, 0.1);
-  color: #ffb1b1;
-}
-
-.home-price-delta-even {
-  border: 1px solid rgba(255, 255, 255, 0.11);
-  background: rgba(255, 255, 255, 0.055);
-  color: #d8e7dc;
-}
-
-.home-price-delta-pending {
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.035);
-  color: #8fb3a1;
-}
-
-.home-price-compare-footnote {
-  margin-top: 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  padding-top: 0.9rem;
-  color: #8fb3a1;
-  font-size: 0.76rem;
-  font-weight: 700;
-  line-height: 1.8;
+.home-price-price-rmb {
+  color: #8dffbd;
+  font-size: 1rem;
+  text-shadow: 0 0 18px rgba(125, 255, 197, 0.24);
 }
 
 .home-feature-card,
@@ -2359,19 +2549,28 @@ onMounted(() => {
   background: rgba(255, 255, 255, 0.1);
 }
 
-@media (min-width: 768px) {
-  .home-price-compare-summary {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
 @media (min-width: 1024px) {
   .home-price-compare-board {
     padding: 1.5rem;
   }
 
-  .home-price-compare-hero {
-    grid-template-columns: minmax(0, 0.92fr) minmax(24rem, 1fr);
+  .home-price-boards {
+    grid-template-columns: minmax(0, 1fr) 4.35rem minmax(0, 1fr);
+    align-items: stretch;
+  }
+
+  .home-price-vs {
+    min-height: auto;
+    align-self: stretch;
+  }
+
+  .home-price-vs::before {
+    inset: 0 auto;
+    left: 50%;
+    width: 1px;
+    height: 100%;
+    background:
+      linear-gradient(180deg, transparent, rgba(159, 189, 255, 0.5), rgba(141, 255, 189, 0.6), transparent);
   }
 
   .home-routing-board {
