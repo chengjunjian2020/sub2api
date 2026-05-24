@@ -327,7 +327,6 @@
                     <span class="home-price-board-currency">USD</span>
                   </div>
                   <h3 class="home-price-board-title">OpenAI 当前官方价格</h3>
-                  <p class="home-price-board-note">左侧表格为美元价格，可在本页官方价配置中维护。</p>
                 </div>
                 <div class="home-price-table-shell">
                   <table class="home-price-split-table">
@@ -385,7 +384,6 @@
                     <span class="home-price-board-currency">RMB</span>
                   </div>
                   <h3 class="home-price-board-title">CodexHub 早鸟价格</h3>
-                  <p class="home-price-board-note">右侧表格为人民币价格，也就是当前对外展示的早鸟价。</p>
                 </div>
                 <div class="home-price-table-shell">
                   <table class="home-price-split-table">
