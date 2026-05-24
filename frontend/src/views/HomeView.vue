@@ -1287,16 +1287,15 @@ onMounted(() => {
 }
 
 .home-signup-bonus {
-  position: fixed;
-  top: clamp(5.05rem, 7.2vh, 5.85rem);
-  left: 50%;
-  z-index: 45;
+  position: relative;
+  z-index: 1;
   display: inline-flex;
-  width: min(31rem, calc(100vw - 2rem));
+  width: min(31rem, 100%);
   align-items: center;
   justify-content: flex-start;
   gap: 0.72rem;
   overflow: hidden;
+  margin-top: 1.35rem;
   border: 1px solid rgba(156, 255, 201, 0.24);
   border-radius: 8px;
   background:
@@ -1309,7 +1308,6 @@ onMounted(() => {
     0 0 26px rgba(72, 255, 160, 0.1);
   cursor: pointer;
   pointer-events: auto;
-  transform: translateX(-50%);
   transition:
     border-color 0.18s ease,
     box-shadow 0.18s ease,
@@ -1325,7 +1323,7 @@ onMounted(() => {
     0 16px 44px rgba(0, 0, 0, 0.38),
     0 0 34px rgba(217, 255, 111, 0.16);
   outline: none;
-  transform: translateX(-50%) translateY(-1px);
+  transform: translateY(-1px);
 }
 
 .home-signup-bonus::before {
@@ -1473,13 +1471,9 @@ onMounted(() => {
 
 @media (max-width: 640px) {
   .home-signup-bonus {
-    top: 4.9rem;
-    right: 1rem;
-    left: 1rem;
-    width: auto;
+    width: 100%;
     gap: 0.55rem;
     padding: 0.55rem;
-    transform: none;
   }
 
   .home-signup-bonus:hover,
