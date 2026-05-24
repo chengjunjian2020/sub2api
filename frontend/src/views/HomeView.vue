@@ -310,9 +310,6 @@
                 <h3 class="mt-3 text-2xl font-black text-white sm:text-3xl">
                   两张表并排看，官方价与早鸟价一眼分明
                 </h3>
-                <p class="mt-3 max-w-2xl text-sm leading-7 text-[#b9c8bd]">
-                  OpenAI 官方价来自本页可配置价格表，CodexHub 早鸟价读取当前公开接口；不再展示同行价、相差倍数和同行标准价字段。
-                </p>
               </div>
             </div>
 
