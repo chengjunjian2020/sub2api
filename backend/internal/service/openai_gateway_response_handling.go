@@ -1431,9 +1431,9 @@ func SetOpenAIHTTPResponseOwner(c *gin.Context, userID, apiKeyID int64) {
 	c.Set(openAIHTTPResponseOwnerContextKey, openAIHTTPResponseOwner{userID: userID, apiKeyID: apiKeyID})
 }
 
-// ValidateOpenAIHTTPResponseOwner authorizes a continuation by downstream
-// tenant. API key identity is retained in the binding, while keys owned by the
-// same user remain interoperable.
+// ValidateOpenAIHTTPResponseOwner authorizes a continuation by downstream API
+// key. Requiring both identities prevents one key from continuing a response
+// created by another key owned by the same user.
 func (s *OpenAIGatewayService) ValidateOpenAIHTTPResponseOwner(
 	ctx context.Context,
 	groupID int64,
@@ -1447,7 +1447,7 @@ func (s *OpenAIGatewayService) ValidateOpenAIHTTPResponseOwner(
 	if err != nil || !found {
 		return false, err
 	}
-	return ownerUserID == userID || (ownerUserID <= 0 && ownerAPIKeyID == apiKeyID), nil
+	return ownerAPIKeyID == apiKeyID && (ownerUserID <= 0 || ownerUserID == userID), nil
 }
 
 // BindOpenAIHTTPResponseOwner records an HTTP continuation owner independently

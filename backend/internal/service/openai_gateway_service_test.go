@@ -578,7 +578,7 @@ func TestOpenAIGatewayService_BindHTTPResponseAccount(t *testing.T) {
 
 	owned, err = svc.ValidateOpenAIHTTPResponseOwner(context.Background(), groupID, "resp_http_001", 601, 502)
 	require.NoError(t, err)
-	require.True(t, owned, "API keys owned by the same downstream user remain interoperable")
+	require.False(t, owned, "responses must be isolated between API keys owned by the same user")
 
 	owned, err = svc.ValidateOpenAIHTTPResponseOwner(context.Background(), groupID, "resp_http_001", 602, 501)
 	require.NoError(t, err)

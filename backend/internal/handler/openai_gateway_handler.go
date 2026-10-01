@@ -2463,6 +2463,30 @@ func (h *OpenAIGatewayHandler) ResponsesWebSocket(c *gin.Context) {
 		closeOpenAIClientWS(wsConn, coderws.StatusPolicyViolation, "previous_response_id must be a response.id (resp_*), not a message id")
 		return
 	}
+	responseOwnerGroupID := int64(0)
+	if apiKey.GroupID != nil {
+		responseOwnerGroupID = *apiKey.GroupID
+	}
+	validateResponseOwner := func(responseID string) bool {
+		if responseID == "" {
+			return true
+		}
+		owned, lookupErr := h.gatewayService.ValidateOpenAIHTTPResponseOwner(
+			c.Request.Context(), responseOwnerGroupID, responseID, subject.UserID, apiKey.ID,
+		)
+		if lookupErr != nil {
+			reqLog.Warn("openai.websocket_previous_response_owner_lookup_failed", zap.Error(lookupErr))
+		}
+		return owned
+	}
+	validateResponseOwnersInPayload := func(payload []byte) bool {
+		return validateResponseOwner(strings.TrimSpace(gjson.GetBytes(payload, "previous_response_id").String())) &&
+			validateResponseOwner(strings.TrimSpace(gjson.GetBytes(payload, "response.previous_response_id").String()))
+	}
+	if !validateResponseOwnersInPayload(firstMessage) {
+		closeOpenAIClientWS(wsConn, coderws.StatusPolicyViolation, "previous_response_id is not available for this API key")
+		return
+	}
 	firstMessageToolCoverage := service.AnalyzeToolCallOutputContextCoverageBytes(firstMessage)
 	previousResponseCanMove := !firstMessageToolCoverage.HasFunctionCallOutput || firstMessageToolCoverage.ContextCoversAllCallIDs
 	reqLog = reqLog.With(
@@ -2870,6 +2894,9 @@ func (h *OpenAIGatewayHandler) ResponsesWebSocket(c *gin.Context) {
 			ReasoningEffortMappings:     reasoningEffortMappings,
 			TurnStarted:                 recordTurnStart,
 			BeforeRequest: func(turn int, payload []byte, originalModel string) error {
+				if !validateResponseOwnersInPayload(payload) {
+					return service.NewOpenAIWSClientCloseError(coderws.StatusPolicyViolation, "previous_response_id is not available for this API key", nil)
+				}
 				c.Set(securityAuditWSTurnContextKey, turn)
 				service.BeginOpsStreamTurn(c, turn)
 				setCyberTurnBody(turn, payload)
@@ -2983,6 +3010,15 @@ func (h *OpenAIGatewayHandler) ResponsesWebSocket(c *gin.Context) {
 				return checkSimpleModeTurnBilling()
 			},
 			AfterTurn: func(turn int, result *service.OpenAIForwardResult, turnErr error) {
+				if turnErr == nil && result != nil && strings.TrimSpace(result.RequestID) != "" {
+					bindCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 3*time.Second)
+					if err := h.gatewayService.BindOpenAIHTTPResponseOwner(
+						bindCtx, responseOwnerGroupID, result.RequestID, subject.UserID, apiKey.ID,
+					); err != nil {
+						reqLog.Warn("openai.websocket_bind_response_owner_failed", zap.Error(err))
+					}
+					cancel()
+				}
 				turnStart := getTurnStart(turn)
 				cyberBlockBody := takeCyberTurnBody(turn)
 				// 每次 attempt 都清 cyber mark；failover 链结束前保留 recorded guard，

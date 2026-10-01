@@ -536,6 +536,10 @@ func (s *OpenAIGatewayService) ProxyResponsesWebSocketFromClient(
 		sessionHash = s.GenerateSessionHash(c, payload.rawForHash)
 		if scope, _ := resolveOpenAIWSExecutionScope(c, payload.rawForHash, apiKeyID); scope != "" {
 			sessionHash = scope
+		} else if sessionHash != "" && apiKeyID > 0 {
+			// Content-derived fallback is also used for connection state, so keep
+			// identical prompts from different API keys in separate namespaces.
+			sessionHash, _ = deriveOpenAISessionHashes(fmt.Sprintf("openai_ws_key:%d|%s", apiKeyID, sessionHash))
 		}
 		preferredConnID = ""
 		storeDisabled = s.isOpenAIWSStoreDisabledInRequestRaw(payload.payloadRaw, account)
