@@ -60,7 +60,7 @@ func (s *ChannelService) ListPublicGPTEarlyBirdSupportedModels(ctx context.Conte
 	}
 
 	supported := ch.SupportedModels()
-	s.fillGlobalPricingFallback(supported)
+	fillGlobalPricingFallback(s.pricingService, supported)
 	return supported, nil
 }
 
