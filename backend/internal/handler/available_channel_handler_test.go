@@ -232,6 +232,8 @@ func TestToPublicGPTEarlyBirdModelPricing_KeepsImageBillingPerRequestPrice(t *te
 	require.Equal(t, "image", rows[0].BillingMode)
 	require.Equal(t, 0.01, *rows[0].ImageOutputPrice)
 	require.Equal(t, 0.01, *rows[0].PerRequestPrice)
+}
+
 func TestBuildPlatformSections_CompositeGroupExpandsAcrossConfiguredModelPlatforms(t *testing.T) {
 	anthropicPrice := 3e-6
 	openAIPrice := 2.5e-6

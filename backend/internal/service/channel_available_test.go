@@ -198,7 +198,7 @@ func TestListPublicGPTEarlyBirdSupportedModels_ReturnsFixedChannelID(t *testing.
 			}, nil
 		},
 	}
-	svc := NewChannelService(repo, &stubGroupRepoForAvailable{}, nil, nil)
+	svc := NewChannelService(repo, &stubGroupRepoForAvailable{}, nil, nil, nil)
 
 	out, err := svc.ListPublicGPTEarlyBirdSupportedModels(context.Background())
 
@@ -219,7 +219,7 @@ func TestListPublicGPTEarlyBirdSupportedModels_MissingChannelReturnsEmpty(t *tes
 			return nil, ErrChannelNotFound
 		},
 	}
-	svc := NewChannelService(repo, &stubGroupRepoForAvailable{}, nil, nil)
+	svc := NewChannelService(repo, &stubGroupRepoForAvailable{}, nil, nil, nil)
 
 	out, err := svc.ListPublicGPTEarlyBirdSupportedModels(context.Background())
 
@@ -233,7 +233,7 @@ func TestListPublicGPTEarlyBirdSupportedModels_DisabledChannelReturnsEmpty(t *te
 			return &Channel{ID: id, Status: StatusDisabled}, nil
 		},
 	}
-	svc := NewChannelService(repo, &stubGroupRepoForAvailable{}, nil, nil)
+	svc := NewChannelService(repo, &stubGroupRepoForAvailable{}, nil, nil, nil)
 
 	out, err := svc.ListPublicGPTEarlyBirdSupportedModels(context.Background())
 
